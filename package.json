@@ -5,11 +5,12 @@
   "private": true,
   "scripts": {
     "cy:run": "cypress run",
+    "cy:parallel": "cypress-parallel -s cy:run -t 2 -d 'cypress/e2e/**/*.cy.js'",
     "test": "cypress run",
     "test:smoke": "cypress run --env grepTags=@smoke",
     "test:regression": "cypress run --env grepTags=@regression",
     "test:api": "cypress run --env grepTags=@api",
-    "test:parallel": "cypress-parallel -s cy:run -t 2 -w parallel-weights.json -d 'cypress/e2e/**/*.cy.js'",
+    "test:parallel": "npm run cy:parallel",
     "lint": "eslint 'cypress/**/*.js' cypress.config.js"
   },
   "devDependencies": {

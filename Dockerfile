@@ -5,8 +5,8 @@ WORKDIR /e2e
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY cypress.config.js .eslintrc.cjs parallel-weights.json ./
+COPY cypress.config.js .eslintrc.cjs ./
 COPY cypress ./cypress
 
 ENTRYPOINT ["npm", "run"]
-CMD ["test:parallel"]
+CMD ["cy:parallel"]

@@ -5,6 +5,8 @@ cypress.env.json
 cypress/screenshots/
 cypress/videos/
 cypress/reports/
+cypress/parallel-weights.json
+parallel-weights.json
 results/
 runner-results/
 multi-reporter-config.json

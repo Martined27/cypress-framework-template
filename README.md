@@ -37,26 +37,14 @@ Specs carry suite and layer tags (`@smoke`, `@regression`, `@api`) with `grepFil
 
 Running specs in parallel by splitting file counts evenly (`4 specs + 4 specs`) often leaves one worker bottlenecked on the longest E2E walkthroughs.
 
-This repo uses [`cypress-parallel`](https://www.npmjs.com/package/cypress-parallel) with a committed [`parallel-weights.json`](parallel-weights.json) profile. After each run, spec durations and relative weights are recorded so slow and fast specs are balanced across worker threads:
+This repo uses [`cypress-parallel`](https://www.npmjs.com/package/cypress-parallel) out of the box (`cypress-parallel -s cy:run -t 2 -d 'cypress/e2e/**/*.cy.js'`), which automatically searches for Cypress specs, generates and reads its weights file on its own, splits specs across threads, and collects the results into a single table:
 
 ### Real Benchmark (Local Electron Headless against OWASP Juice Shop)
 
 | Execution Mode | Command | Specs / Tests | Wall-Clock Time | Notes |
 | :--- | :--- | :---: | :---: | :--- |
 | **Sequential (1 Worker)** | `npm test` | 8 specs (14 tests) | **23.72s** | Runs all 8 specs serially in a single process |
-| **Weighted Parallel (2 Workers)** | `npm run test:parallel` | 8 specs (14 tests) | **17.16s** (**~28% faster**) | Balances spec weights across 2 concurrent workers |
-
-#### Worker Bucket Allocation from `parallel-weights.json`
-- **Worker 1 (Total weight `35` — 1 heavy UI walkthrough + 2 fast API specs):**
-  - `regression/registration-flow.cy.js` (`5.89s`, weight `35`)
-  - `regression/api-contracts.cy.js` (`0.12s`, weight `0`)
-  - `smoke/api-health.cy.js` (`0.10s`, weight `0`)
-- **Worker 2 (Total weight `40` — 5 medium UI specs):**
-  - `regression/auth-negative.cy.js` (`1.80s`, weight `10`)
-  - `regression/product-search.cy.js` (`1.78s`, weight `10`)
-  - `smoke/auth-login.cy.js` (`1.62s`, weight `9`)
-  - `regression/basket-management.cy.js` (`1.16s`, weight `6`)
-  - `smoke/catalog-load.cy.js` (`0.87s`, weight `5`)
+| **Parallel (2 Threads)** | `npm run cy:parallel` | 8 specs (14 tests) | **17.16s** (**~28% faster**) | Splits specs across 2 concurrent threads via `cypress-parallel` |
 
 ---
 
@@ -71,7 +59,6 @@ cypress-framework-template/
 ├── docker-compose.yml               # Local OWASP Juice Shop target (:3000)
 ├── cypress.config.js                # Cypress 13 config + @cypress/grep + mochawesome reporter
 ├── cypress.env.json.example         # Environment variable template
-├── parallel-weights.json            # Spec duration weights for balanced parallel execution
 ├── .eslintrc.cjs                    # ESLint + eslint-plugin-cypress (forbids hard waits)
 ├── cypress/
 │   ├── e2e/
