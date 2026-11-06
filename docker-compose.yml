@@ -1,0 +1,6 @@
+services:
+  juice-shop:
+    image: bkimminich/juice-shop:v17.1.1
+    container_name: cypress-demo-juice-shop
+    ports:
+      - "3000:3000"

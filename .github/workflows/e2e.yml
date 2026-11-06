@@ -1,0 +1,69 @@
+name: Cypress E2E Suite (Parallel)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      grep_tags:
+        description: 'Optional @cypress/grep tag filter (e.g., @smoke or @regression)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      juice-shop:
+        image: bkimminich/juice-shop:v17.1.1
+        ports:
+          - 3000:3000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint specs, Page Objects, and helpers
+        run: npm run lint
+
+      - name: Wait for OWASP Juice Shop service
+        run: |
+          for i in {1..25}; do
+            if curl -sf http://localhost:3000 >/dev/null; then
+              echo "Juice Shop ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run Cypress Suite (Weight-Balanced Parallel)
+        run: |
+          if [ -n "${{ inputs.grep_tags }}" ]; then
+            npx cypress run --env grepTags="${{ inputs.grep_tags }}"
+          else
+            npm run test:parallel
+          fi
+
+      - name: Upload Mochawesome HTML Reports & Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-e2e-report
+          path: |
+            cypress/reports/
+            cypress/screenshots/
+          retention-days: 14

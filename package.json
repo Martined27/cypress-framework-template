@@ -1,0 +1,24 @@
+{
+  "name": "cypress-framework-template",
+  "version": "0.1.0",
+  "description": "Production-style Cypress E2E framework with Page Object Model, scoped helper methods vs. global commands, @cypress/grep tag filtering, API state seeding, and weight-balanced parallel execution via cypress-parallel.",
+  "private": true,
+  "scripts": {
+    "cy:run": "cypress run",
+    "test": "cypress run",
+    "test:smoke": "cypress run --env grepTags=@smoke",
+    "test:regression": "cypress run --env grepTags=@regression",
+    "test:api": "cypress run --env grepTags=@api",
+    "test:parallel": "cypress-parallel -s cy:run -t 2 -w parallel-weights.json -d 'cypress/e2e/**/*.cy.js'",
+    "lint": "eslint 'cypress/**/*.js' cypress.config.js"
+  },
+  "devDependencies": {
+    "@cypress/grep": "^4.1.0",
+    "cypress": "^13.15.0",
+    "cypress-mochawesome-reporter": "^3.8.2",
+    "cypress-parallel": "^0.14.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-cypress": "^3.5.0"
+  },
+  "license": "MIT"
+}
