@@ -3,7 +3,7 @@
 [![Cypress E2E Suite (Parallel)](https://github.com/Martined27/cypress-framework-template/actions/workflows/e2e.yml/badge.svg)](https://github.com/Martined27/cypress-framework-template/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A production-style **Cypress 13** end-to-end and API test automation framework built around **Singleton Page Objects**, **Scoped Module Helpers vs. Global Commands**, **tag-based suite filtering (`@cypress/grep`)**, **REST API test data seeding**, and **weight-balanced parallel spec execution (`cypress-parallel`)**.
+A production-style **Cypress 13** end-to-end and API test automation framework built around **Singleton Page Objects**, **Scoped Module Helpers vs. Global Commands**, **readable test steps (`cy.step()`)**, **suite & environment tag filtering (`@cypress/grep`)**, **REST API test data seeding**, and **weight-balanced parallel spec execution (`cypress-parallel`)**.
 
 Tested against a local containerized [OWASP Juice Shop](https://github.com/juice-shop/juice-shop) instance (`docker compose up -d`).
 
@@ -25,11 +25,34 @@ This framework enforces a strict three-tier boundary:
 ### 2. API-First Setup & State Seeding
 Only the dedicated login and registration specs drive the authentication UI. All other functional specs provision users, obtain JWTs, and seed or clear shopping-basket items directly via `cy.request()` before visiting the target route, keeping UI specs fast and independent.
 
-### 3. Tag-Based Suite Filtering (`@cypress/grep`)
-Specs carry suite and layer tags (`@smoke`, `@regression`, `@api`) with `grepFilterSpecs: true` and `grepOmitFiltered: true` enabled so filtered specs are skipped before browser launch:
-- `npm run test:smoke` — Fast critical-path UI + API readiness checks
-- `npm run test:regression` — Full functional, negative-path, and API contract suite
-- `npm run test:api` — Headless REST contract & authorization checks only
+### 3. Self-Documenting Test Steps (`cypress-plugin-steps`)
+Every test uses `cy.step('...')` from [`cypress-plugin-steps`](https://github.com/filiphric/cypress-plugin-steps) to log numbered, human-readable step headers directly in the Cypress Command Log and failure output without relying on stale comments:
+```js
+cy.step('Seed an active customer account via REST API');
+provisionUniqueCustomer().then((customer) => {
+  cy.step('Submit valid credentials through the Login Page UI');
+  LoginPage.visit();
+  LoginPage.submit(customer.email, customer.password);
+});
+```
+
+### 4. Suite & Environment Tag Filtering (`@cypress/grep`)
+Specs carry both **suite tags** (`@smoke`, `@regression`, `@api`) and **target environment tags** (`#integration`, `#staging`, `#prod`) with `grepFilterSpecs: true` and `grepOmitFiltered: true` enabled so filtered specs are skipped before browser launch:
+
+| Tag Type | Tag | Purpose | Command |
+| :--- | :--- | :--- | :--- |
+| **Suite** | `@smoke` | Fast critical-path UI + API readiness checks | `npm run test:smoke` |
+| **Suite** | `@regression` | Full functional, negative-path, and API contract suite | `npm run test:regression` |
+| **Suite** | `@api` | Headless REST contract & authorization checks only | `npm run test:api` |
+| **Environment** | `#integration` | Full suite including account creation & state-mutating flows (14 tests) | `npm run test:integration` |
+| **Environment** | `#staging` | Pre-production verification excluding noisy user registration spam (12 tests) | `npm run test:staging` |
+| **Environment** | `#prod` | Strictly read-only, non-destructive checks safe for live production (7 tests) | `npm run test:prod` |
+
+Tags can also be combined with `+` (AND) or space (OR) using `@cypress/grep`:
+```bash
+# Run only @smoke tests that are safe for #prod:
+npx cypress run --env grepTags="@smoke+#prod"
+```
 
 ---
 
@@ -115,8 +138,16 @@ npm run test:regression
 # API contract suite only (@api):
 npm run test:api
 
+# Environment-scoped runs (#integration, #staging, #prod):
+npm run test:integration
+npm run test:staging
+npm run test:prod
+
+# Combine suite + environment tags (e.g., @smoke tests safe for #prod):
+npx cypress run --env grepTags="@smoke+#prod"
+
 # Override target URL (e.g., against a deployed staging environment):
-CYPRESS_BASE_URL=https://staging.my-webapp.com npm run test:smoke
+CYPRESS_BASE_URL=https://staging.my-webapp.com npm run test:staging
 ```
 
 ---

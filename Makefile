@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help up down wait test smoke regression parallel lint demo
+.PHONY: help up down wait test smoke regression integration staging prod parallel lint demo
 
 help: ## Show available Make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -27,6 +27,15 @@ smoke: ## Run @smoke tagged specs only
 
 regression: ## Run @regression tagged specs only
 	npm run test:regression
+
+integration: ## Run #integration environment-tagged tests only
+	npm run test:integration
+
+staging: ## Run #staging environment-tagged tests only
+	npm run test:staging
+
+prod: ## Run #prod safe read-only tests only
+	npm run test:prod
 
 parallel: ## Run weight-balanced parallel suite via cypress-parallel (2 threads)
 	npm run test:parallel

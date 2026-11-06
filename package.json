@@ -1,7 +1,7 @@
 {
   "name": "cypress-framework-template",
   "version": "0.1.0",
-  "description": "Production-style Cypress E2E framework with Page Object Model, scoped helper methods vs. global commands, @cypress/grep tag filtering, API state seeding, and weight-balanced parallel execution via cypress-parallel.",
+  "description": "Production-style Cypress E2E framework with Page Object Model, scoped helper methods vs. global commands, cy.step() logging, @cypress/grep suite & environment tag filtering (#integration, #staging, #prod), and cypress-parallel execution.",
   "private": true,
   "scripts": {
     "cy:run": "cypress run",
@@ -10,6 +10,9 @@
     "test:smoke": "cypress run --env grepTags=@smoke",
     "test:regression": "cypress run --env grepTags=@regression",
     "test:api": "cypress run --env grepTags=@api",
+    "test:integration": "cypress run --env grepTags=#integration",
+    "test:staging": "cypress run --env grepTags=#staging",
+    "test:prod": "cypress run --env grepTags=#prod",
     "test:parallel": "npm run cy:parallel",
     "lint": "eslint 'cypress/**/*.js' cypress.config.js"
   },
@@ -18,6 +21,7 @@
     "cypress": "^13.15.0",
     "cypress-mochawesome-reporter": "^3.8.2",
     "cypress-parallel": "^0.14.0",
+    "cypress-plugin-steps": "^1.4.2",
     "eslint": "^8.57.1",
     "eslint-plugin-cypress": "^3.5.0"
   },
