@@ -48,9 +48,9 @@ jobs:
       - name: Run Cypress Suite (Weight-Balanced Parallel)
         run: |
           if [ -n "${{ inputs.grep_tags }}" ]; then
-            npx cypress run --env grepTags="${{ inputs.grep_tags }}"
+            npx cypress run --browser chrome --env grepTags="${{ inputs.grep_tags }}"
           else
-            npm run test:parallel
+            npm run cy:parallel:chrome
           fi
 
       - name: Upload Mochawesome HTML Report

@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "cy:run": "cypress run",
+    "cy:run:chrome": "cypress run --browser chrome",
     "cy:parallel": "cypress-parallel -s cy:run -t 2 -d 'cypress/e2e/**/*.cy.js'",
+    "cy:parallel:chrome": "cypress-parallel -s cy:run:chrome -t 2 -d 'cypress/e2e/**/*.cy.js'",
     "test": "cypress run",
     "test:smoke": "cypress run --env grepTags=@smoke",
     "test:regression": "cypress run --env grepTags=@regression",
