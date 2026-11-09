@@ -1,28 +1,20 @@
-class BasketPage {
-  get url() {
-    return '/#/basket';
-  }
+const BasketPage = {
+  url: '/checkout',
+  basketRows: () => cy.get('table tbody tr'),
+  productTitle: () => cy.get('[data-test="product-title"]'),
+  productQuantity: () => cy.get('[data-test="product-quantity"]'),
+  cartTotal: () => cy.get('[data-test="cart-total"]'),
+  proceedButton: () => cy.get('[data-test="proceed-1"]'),
 
-  get basketRows() {
-    return cy.get('mat-row');
-  }
+  visit: (cartId) => {
+    cy.visit('/checkout', {
+      onBeforeLoad(win) {
+        if (cartId) {
+          win.sessionStorage.setItem('cart_id', cartId);
+        }
+      },
+    });
+  },
+};
 
-  get checkoutButton() {
-    return cy.get('#checkoutButton');
-  }
-
-  get totalPrice() {
-    return cy.get('#price');
-  }
-
-  visit() {
-    cy.dismissOverlays();
-    cy.visit(this.url);
-  }
-
-  removeFirstItem() {
-    return this.basketRows.first().find('.fa-trash-alt').parents('button').click();
-  }
-}
-
-export default new BasketPage();
+export default BasketPage;

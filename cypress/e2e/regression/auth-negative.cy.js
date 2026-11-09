@@ -1,9 +1,9 @@
-// Negative-path authentication regression tests.
+// Negative authentication tests for invalid credentials and empty fields.
 import LoginPage from '../../pages/LoginPage';
 import { registerAuthIntercepts } from '../../helpers/intercepts';
 
 describe(
-  'Authentication Negative Paths',
+  'Negative Authentication Scenarios',
   { tags: ['@regression', '#integration', '#staging'] },
   () => {
     beforeEach(() => {
@@ -11,21 +11,24 @@ describe(
       LoginPage.visit();
     });
 
-    it('rejects login and keeps the user on /#/login when credentials are invalid', () => {
-      cy.step('Submit invalid user credentials from fixture');
-      cy.fixture('users').then(({ invalidUser }) => {
-        LoginPage.submit(invalidUser.email, invalidUser.password);
-      });
+    it('displays an error message when submitting an unregistered email', () => {
+      cy.fixture('users').then((users) => {
+        cy.step('Attempt login with unregistered user credentials');
+        LoginPage.submit(users.invalidUser.email, users.invalidUser.password);
 
-      cy.step('Verify 401 response and visible error banner');
-      cy.wait('@loginRequest').its('response.statusCode').should('eq', 401);
-      cy.url().should('include', LoginPage.url);
-      LoginPage.errorBanner.should('be.visible');
+        cy.step('Verify 401 Unauthorized API response and visible error alert');
+        cy.wait('@loginRequest').its('response.statusCode').should('eq', 401);
+        cy.url().should('include', LoginPage.url);
+        LoginPage.errorBanner().should('be.visible');
+      });
     });
 
-    it('keeps the login submit button disabled when email and password are empty', () => {
-      cy.step('Verify submit button is disabled on initial empty form');
-      LoginPage.loginButton.should('be.disabled');
+    it('shows validation error feedback when submitting an empty login form', () => {
+      cy.step('Submit empty credentials form');
+      LoginPage.loginButton().click();
+
+      cy.step('Verify field-level error message is displayed');
+      LoginPage.emailError().should('be.visible');
     });
   }
 );

@@ -8,24 +8,23 @@ describe(
   () => {
     beforeEach(() => {
       registerCatalogIntercepts();
-      CatalogPage.visit();
     });
 
     it('renders the product grid with available items on initial load', () => {
-      cy.step('Wait for catalog search API response');
-      cy.wait('@productSearch').its('response.statusCode').should('be.oneOf', [200, 304]);
+      cy.step('Open catalog page');
+      CatalogPage.visit();
 
       cy.step('Verify product cards are rendered in the grid');
-      CatalogPage.productCards.should('have.length.greaterThan', 0);
+      CatalogPage.productCards().should('have.length.greaterThan', 0);
     });
 
-    it('navigates to the login view from the top account menu', () => {
-      cy.step('Open top navigation account menu');
-      CatalogPage.accountMenuButton.click();
+    it('navigates to the login view from the top navigation sign in button', () => {
+      cy.step('Open catalog page');
+      CatalogPage.visit();
 
-      cy.step('Select Login option and verify URL route');
-      CatalogPage.loginMenuButton.click();
-      cy.url().should('include', '/#/login');
+      cy.step('Select Sign In option and verify URL route');
+      CatalogPage.signInButton().click();
+      cy.url().should('include', '/auth/login');
     });
   }
 );

@@ -18,11 +18,6 @@ permissions:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    services:
-      juice-shop:
-        image: bkimminich/juice-shop:v17.1.1
-        ports:
-          - 3000:3000
 
     steps:
       - name: Checkout repository
@@ -40,11 +35,11 @@ jobs:
       - name: Lint specs, Page Objects, and helpers
         run: npm run lint
 
-      - name: Wait for OWASP Juice Shop service
+      - name: Verify live Practice Software Testing target reachability
         run: |
-          for i in {1..25}; do
-            if curl -sf http://localhost:3000 >/dev/null; then
-              echo "Juice Shop ready"
+          for i in {1..15}; do
+            if curl -sf https://practicesoftwaretesting.com >/dev/null; then
+              echo "Practice Software Testing live service ready"
               break
             fi
             sleep 2
@@ -58,12 +53,10 @@ jobs:
             npm run test:parallel
           fi
 
-      - name: Upload Mochawesome HTML Reports & Screenshots
-        if: always()
+      - name: Upload Mochawesome HTML Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: cypress-e2e-report
-          path: |
-            cypress/reports/
-            cypress/screenshots/
+          name: cypress-test-report
+          path: cypress/reports/
           retention-days: 14

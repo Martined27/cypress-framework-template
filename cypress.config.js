@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
@@ -11,17 +12,18 @@ module.exports = defineConfig({
     saveAllAttempts: false,
   },
   e2e: {
-    baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:3000',
+    baseUrl: process.env.CYPRESS_BASE_URL || 'https://practicesoftwaretesting.com',
     specPattern: 'cypress/e2e/**/*.cy.js',
     supportFile: 'cypress/support/e2e.js',
     viewportWidth: 1280,
     viewportHeight: 800,
     video: false,
     screenshotOnRunFailure: true,
-    defaultCommandTimeout: 8000,
+    defaultCommandTimeout: 10000,
     env: {
-      TEST_EMAIL: 'cypress.qa@example.com',
-      TEST_PASSWORD: 'CypressQa!2026',
+      apiUrl: process.env.CYPRESS_API_URL || 'https://api.practicesoftwaretesting.com',
+      TEST_EMAIL: process.env.TEST_EMAIL || 'customer@practicesoftwaretesting.com',
+      TEST_PASSWORD: process.env.TEST_PASSWORD || 'welcome01',
       grepFilterSpecs: true,
       grepOmitFiltered: true,
     },

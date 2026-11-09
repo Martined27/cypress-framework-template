@@ -1,44 +1,33 @@
-// Scoped shopping-basket & catalog API helpers.
-// Imported only by catalog and basket specs to seed or clean state via REST.
+// Scoped shopping-basket API helpers.
+// Used to seed cart state via REST endpoints before checkout tests.
 
-export function clearBasketViaApi(token, bid) {
+export function createCartViaApi() {
+  const apiUrl = Cypress.env('apiUrl') || 'https://api.practicesoftwaretesting.com';
   return cy
     .request({
-      method: 'GET',
-      url: `/rest/basket/${bid}`,
-      headers: { Authorization: `Bearer ${token}` },
+      method: 'POST',
+      url: `${apiUrl}/carts`,
     })
     .then((res) => {
-      const items = res.body?.data?.Products || [];
-      items.forEach((product) => {
-        const basketItemId = product.BasketItem?.id;
-        if (basketItemId) {
-          cy.request({
-            method: 'DELETE',
-            url: `/api/BasketItems/${basketItemId}`,
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-      });
+      expect(res.status).to.eq(201);
+      return res.body.id;
     });
 }
 
-export function seedBasketItemViaApi(token, bid, productId = 1, quantity = 1) {
-  return cy.request({
-    method: 'POST',
-    url: '/api/BasketItems/',
-    headers: { Authorization: `Bearer ${token}` },
-    body: {
-      ProductId: productId,
-      BasketId: String(bid),
-      quantity,
-    },
-  });
-}
+export function seedBasketItemViaApi(cartId, productId, quantity = 2) {
+  const apiUrl = Cypress.env('apiUrl') || 'https://api.practicesoftwaretesting.com';
+  const resolveProductId = productId
+    ? cy.wrap(productId)
+    : cy.request(`${apiUrl}/products`).then((res) => res.body.data[0].id);
 
-export function searchProductsViaApi(query) {
-  return cy.request({
-    method: 'GET',
-    url: `/rest/products/search?q=${encodeURIComponent(query)}`,
+  return resolveProductId.then((validId) => {
+    return cy.request({
+      method: 'POST',
+      url: `${apiUrl}/carts/${cartId}`,
+      body: {
+        product_id: validId,
+        quantity,
+      },
+    });
   });
 }
