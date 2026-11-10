@@ -1,39 +1,19 @@
-class LoginPage {
-  get url() {
-    return '/#/login';
-  }
+const LoginPage = {
+  url: '/auth/login',
+  emailInput: () => cy.get('[data-test="email"]'),
+  passwordInput: () => cy.get('#password'),
+  loginButton: () => cy.get('[data-test="login-submit"]'),
+  errorBanner: () => cy.get('[data-test="login-error"]'),
+  emailError: () => cy.get('[data-test="email-error"]'),
+  newCustomerLink: () => cy.get('[data-test="register-link"]'),
+  accountMenuButton: () => cy.get('[data-test="nav-menu"]'),
 
-  get emailInput() {
-    return cy.get('#email');
-  }
+  visit: () => cy.visit('/auth/login'),
+  submit: (email, password) => {
+    if (email) LoginPage.emailInput().clear().type(email);
+    if (password) LoginPage.passwordInput().clear().type(password, { log: false });
+    LoginPage.loginButton().click();
+  },
+};
 
-  get passwordInput() {
-    return cy.get('#password');
-  }
-
-  get loginButton() {
-    return cy.get('#loginButton');
-  }
-
-  get errorBanner() {
-    return cy.get('.error');
-  }
-
-  get newCustomerLink() {
-    return cy.get('#newCustomerLink a');
-  }
-
-  visit() {
-    cy.dismissOverlays();
-    cy.visit(this.url);
-  }
-
-  // Scoped submit method on LoginPage — avoids colliding with RegistrationPage.submit() on global cy.*
-  submit(email, password) {
-    this.emailInput.clear().type(email);
-    this.passwordInput.clear().type(password, { log: false });
-    this.loginButton.click();
-  }
-}
-
-export default new LoginPage();
+export default LoginPage;

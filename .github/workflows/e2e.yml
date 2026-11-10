@@ -18,11 +18,6 @@ permissions:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    services:
-      juice-shop:
-        image: bkimminich/juice-shop:v17.1.1
-        ports:
-          - 3000:3000
 
     steps:
       - name: Checkout repository
@@ -40,30 +35,51 @@ jobs:
       - name: Lint specs, Page Objects, and helpers
         run: npm run lint
 
-      - name: Wait for OWASP Juice Shop service
+      - name: Start Practice Software Testing Docker stack
         run: |
-          for i in {1..25}; do
-            if curl -sf http://localhost:3000 >/dev/null; then
-              echo "Juice Shop ready"
+          docker compose up -d mariadb laravel-api
+          echo "Waiting for MariaDB..."
+          for i in $(seq 1 30); do
+            if docker compose exec -T mariadb mysqladmin ping -h localhost -u root -proot --silent 2>/dev/null; then
+              echo "MariaDB is ready!"
               break
             fi
             sleep 2
           done
+          docker compose exec -T laravel-api php artisan migrate:fresh --seed --force
+          docker compose up -d web angular-ui
+          echo "Waiting for REST API on port 8091..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8091/status >/dev/null; then
+              echo "REST API is ready!"
+              break
+            fi
+            sleep 2
+          done
+          echo "Waiting for Angular UI on port 4200..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:4200 >/dev/null; then
+              echo "Angular UI is ready!"
+              break
+            fi
+            sleep 3
+          done
 
       - name: Run Cypress Suite (Weight-Balanced Parallel)
+        env:
+          CYPRESS_BASE_URL: http://localhost:4200
+          CYPRESS_API_URL: http://localhost:8091
         run: |
           if [ -n "${{ inputs.grep_tags }}" ]; then
-            npx cypress run --env grepTags="${{ inputs.grep_tags }}"
+            npx cypress run --browser chrome --env grepTags="${{ inputs.grep_tags }}"
           else
-            npm run test:parallel
+            npm run cy:parallel:chrome
           fi
 
-      - name: Upload Mochawesome HTML Reports & Screenshots
-        if: always()
+      - name: Upload Mochawesome HTML Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: cypress-e2e-report
-          path: |
-            cypress/reports/
-            cypress/screenshots/
+          name: cypress-test-report
+          path: cypress/reports/
           retention-days: 14

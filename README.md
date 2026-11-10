@@ -5,7 +5,7 @@
 
 A production-style **Cypress 13** end-to-end and API test automation framework built around **Singleton Page Objects**, **Scoped Module Helpers vs. Global Commands**, **readable test steps (`cy.step()`)**, **suite & environment tag filtering (`@cypress/grep`)**, **REST API test data seeding**, and **weight-balanced parallel spec execution (`cypress-parallel`)**.
 
-Tested against a local containerized [OWASP Juice Shop](https://github.com/juice-shop/juice-shop) instance (`docker compose up -d`).
+Tested against the live modern web application **[Practice Software Testing - Toolshop](https://practicesoftwaretesting.com)** with its public REST API backend at `https://api.practicesoftwaretesting.com`.
 
 ---
 
@@ -28,12 +28,13 @@ Only the dedicated login and registration specs drive the authentication UI. All
 ### 3. Self-Documenting Test Steps (`cypress-plugin-steps`)
 Every test uses `cy.step('...')` from [`cypress-plugin-steps`](https://github.com/filiphric/cypress-plugin-steps) to log numbered, human-readable step headers directly in the Cypress Command Log and failure output without relying on stale comments:
 ```js
-cy.step('Seed an active customer account via REST API');
-provisionUniqueCustomer().then((customer) => {
-  cy.step('Submit valid credentials through the Login Page UI');
-  LoginPage.visit();
-  LoginPage.submit(customer.email, customer.password);
-});
+cy.step('Open shopping basket view with seeded cart ID');
+BasketPage.visit(testCartId);
+cy.wait('@getBasket').its('response.statusCode').should('be.oneOf', [200, 304]);
+
+cy.step('Delete item from basket and verify API call');
+BasketPage.removeFirstItem();
+cy.wait('@deleteBasketItem').its('response.statusCode').should('eq', 204);
 ```
 
 ### 4. Suite & Environment Tag Filtering (`@cypress/grep`)
@@ -44,9 +45,9 @@ Specs carry both **suite tags** (`@smoke`, `@regression`, `@api`) and **target e
 | **Suite** | `@smoke` | Fast critical-path UI + API readiness checks | `npm run test:smoke` |
 | **Suite** | `@regression` | Full functional, negative-path, and API contract suite | `npm run test:regression` |
 | **Suite** | `@api` | Headless REST contract & authorization checks only | `npm run test:api` |
-| **Environment** | `#integration` | Full suite including account creation & state-mutating flows (14 tests) | `npm run test:integration` |
-| **Environment** | `#staging` | Pre-production verification excluding noisy user registration spam (12 tests) | `npm run test:staging` |
-| **Environment** | `#prod` | Strictly read-only, non-destructive checks safe for live production (7 tests) | `npm run test:prod` |
+| **Environment** | `#integration` | Full suite including account creation & state-mutating flows | `npm run test:integration` |
+| **Environment** | `#staging` | Pre-production verification excluding noisy user registration spam | `npm run test:staging` |
+| **Environment** | `#prod` | Strictly read-only, non-destructive checks safe for live production | `npm run test:prod` |
 
 Tags can also be combined with `+` (AND) or space (OR) using `@cypress/grep`:
 ```bash
@@ -60,14 +61,7 @@ npx cypress run --env grepTags="@smoke+#prod"
 
 Running specs in parallel by splitting file counts evenly (`4 specs + 4 specs`) often leaves one worker bottlenecked on the longest E2E walkthroughs.
 
-This repo uses [`cypress-parallel`](https://www.npmjs.com/package/cypress-parallel) out of the box (`cypress-parallel -s cy:run -t 2 -d 'cypress/e2e/**/*.cy.js'`), which automatically searches for Cypress specs, generates and reads its weights file on its own, splits specs across threads, and collects the results into a single table:
-
-### Real Benchmark (Local Electron Headless against OWASP Juice Shop)
-
-| Execution Mode | Command | Specs / Tests | Wall-Clock Time | Notes |
-| :--- | :--- | :---: | :---: | :--- |
-| **Sequential (1 Worker)** | `npm test` | 8 specs (14 tests) | **23.72s** | Runs all 8 specs serially in a single process |
-| **Parallel (2 Threads)** | `npm run cy:parallel` | 8 specs (14 tests) | **17.16s** (**~28% faster**) | Splits specs across 2 concurrent threads via `cypress-parallel` |
+This repo uses [`cypress-parallel`](https://www.npmjs.com/package/cypress-parallel) out of the box (`cypress-parallel -s cy:run -t 2 -d 'cypress/e2e/**/*.cy.js'`), which automatically searches for Cypress specs, generates and reads its weights file on its own, splits specs across threads, and collects the results into a single table.
 
 ---
 
@@ -77,9 +71,7 @@ This repo uses [`cypress-parallel`](https://www.npmjs.com/package/cypress-parall
 cypress-framework-template/
 ├── README.md
 ├── LICENSE
-├── Makefile                         # One-command targets: demo, up, test, smoke, regression, parallel, lint, down
-├── Dockerfile                       # Containerized runner (cypress/included:13.15.0)
-├── docker-compose.yml               # Local OWASP Juice Shop target (:3000)
+├── Makefile                         # One-command targets: demo, test, smoke, regression, parallel, lint
 ├── cypress.config.js                # Cypress 13 config + @cypress/grep + mochawesome reporter
 ├── cypress.env.json.example         # Environment variable template
 ├── .eslintrc.cjs                    # ESLint + eslint-plugin-cypress (forbids hard waits)
@@ -103,14 +95,14 @@ cypress-framework-template/
 │   ├── helpers/
 │   │   ├── auth.helpers.js
 │   │   ├── basket.helpers.js
-│   │       └── intercepts.js
+│   │   └── intercepts.js
 │   ├── support/
 │   │   ├── commands.js
 │   │   └── e2e.js
 │   └── fixtures/
 │       └── users.json
 └── .github/workflows/
-    └── e2e.yml                      # GitHub Actions CI: Lint + Juice Shop service + parallel run + HTML report artifact
+    └── e2e.yml                      # GitHub Actions CI: Lint + reachability check + parallel run + HTML report artifact
 ```
 
 ---
@@ -122,7 +114,7 @@ cypress-framework-template/
 npm ci
 ```
 
-### 2. Run the Full Local Demo (Starts Juice Shop + Lints + Runs Parallel Suite)
+### 2. Run the Full Demo (Lints + Runs Parallel Suite against live target)
 ```bash
 make demo
 ```
@@ -146,8 +138,8 @@ npm run test:prod
 # Combine suite + environment tags (e.g., @smoke tests safe for #prod):
 npx cypress run --env grepTags="@smoke+#prod"
 
-# Override target URL (e.g., against a deployed staging environment):
-CYPRESS_BASE_URL=https://staging.my-webapp.com npm run test:staging
+# Override target URL:
+CYPRESS_BASE_URL=https://practicesoftwaretesting.com npm run test:smoke
 ```
 
 ---

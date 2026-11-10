@@ -1,17 +1,11 @@
-// Shared network intercept registration helper.
+// Shared network intercept registration helpers.
+// Used across multiple test suites for catalog and authentication endpoints.
 
 export function registerCatalogIntercepts() {
-  cy.intercept('GET', '/rest/products/search*').as('productSearch');
-  cy.intercept('GET', '/api/Quantitys*').as('productQuantities');
+  cy.intercept('**/products*').as('productSearch');
 }
 
 export function registerAuthIntercepts() {
-  cy.intercept('POST', '/rest/user/login').as('loginRequest');
-  cy.intercept('POST', '/api/Users*').as('registerUser');
-}
-
-export function registerBasketIntercepts() {
-  cy.intercept('GET', '/rest/basket/*').as('getBasket');
-  cy.intercept('POST', '/api/BasketItems*').as('addBasketItem');
-  cy.intercept('DELETE', '/api/BasketItems/*').as('deleteBasketItem');
+  cy.intercept('POST', '**/users/login').as('loginRequest');
+  cy.intercept('POST', '**/users/register').as('registerUser');
 }
