@@ -1,9 +1,22 @@
 SHELL := /bin/bash
 
-.PHONY: help wait test smoke regression integration staging prod parallel lint demo
+.PHONY: help app-up app-down wait test smoke regression integration staging prod parallel lint demo
 
 help: ## Show available Make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+
+app-up: ## Start Practice Software Testing locally via Docker Compose and seed database
+	docker compose up -d
+	@for i in {1..30}; do \
+		if docker compose exec -T mariadb mysqladmin ping -h localhost -u root -proot --silent 2>/dev/null; then \
+			break; \
+		fi; \
+		sleep 2; \
+	done
+	docker compose exec -T laravel-api php artisan migrate:fresh --seed --force
+
+app-down: ## Stop and remove local Docker Compose containers
+	docker compose down -v
 
 wait: ## Verify live Practice Software Testing site is reachable
 	@for i in {1..10}; do \

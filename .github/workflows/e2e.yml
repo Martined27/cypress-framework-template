@@ -35,17 +35,39 @@ jobs:
       - name: Lint specs, Page Objects, and helpers
         run: npm run lint
 
-      - name: Verify live Practice Software Testing target reachability
+      - name: Start Practice Software Testing Docker stack
         run: |
-          for i in {1..15}; do
-            if curl -sf https://practicesoftwaretesting.com >/dev/null; then
-              echo "Practice Software Testing live service ready"
+          docker compose up -d
+          echo "Waiting for MariaDB..."
+          for i in $(seq 1 30); do
+            if docker compose exec -T mariadb mysqladmin ping -h localhost -u root -proot --silent 2>/dev/null; then
+              echo "MariaDB is ready!"
               break
             fi
             sleep 2
           done
+          docker compose exec -T laravel-api php artisan migrate:fresh --seed --force
+          echo "Waiting for REST API on port 8091..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8091/status >/dev/null; then
+              echo "REST API is ready!"
+              break
+            fi
+            sleep 2
+          done
+          echo "Waiting for Angular UI on port 4200..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:4200 >/dev/null; then
+              echo "Angular UI is ready!"
+              break
+            fi
+            sleep 3
+          done
 
       - name: Run Cypress Suite (Weight-Balanced Parallel)
+        env:
+          CYPRESS_BASE_URL: http://localhost:4200
+          CYPRESS_API_URL: http://localhost:8091
         run: |
           if [ -n "${{ inputs.grep_tags }}" ]; then
             npx cypress run --browser chrome --env grepTags="${{ inputs.grep_tags }}"
