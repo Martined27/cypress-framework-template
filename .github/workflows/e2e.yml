@@ -37,7 +37,7 @@ jobs:
 
       - name: Start Practice Software Testing Docker stack
         run: |
-          docker compose up -d
+          docker compose up -d mariadb laravel-api
           echo "Waiting for MariaDB..."
           for i in $(seq 1 30); do
             if docker compose exec -T mariadb mysqladmin ping -h localhost -u root -proot --silent 2>/dev/null; then
@@ -47,6 +47,7 @@ jobs:
             sleep 2
           done
           docker compose exec -T laravel-api php artisan migrate:fresh --seed --force
+          docker compose up -d web angular-ui
           echo "Waiting for REST API on port 8091..."
           for i in $(seq 1 30); do
             if curl -sf http://localhost:8091/status >/dev/null; then

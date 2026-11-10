@@ -6,7 +6,7 @@ help: ## Show available Make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 app-up: ## Start Practice Software Testing locally via Docker Compose and seed database
-	docker compose up -d
+	docker compose up -d mariadb laravel-api
 	@for i in {1..30}; do \
 		if docker compose exec -T mariadb mysqladmin ping -h localhost -u root -proot --silent 2>/dev/null; then \
 			break; \
@@ -14,6 +14,7 @@ app-up: ## Start Practice Software Testing locally via Docker Compose and seed d
 		sleep 2; \
 	done
 	docker compose exec -T laravel-api php artisan migrate:fresh --seed --force
+	docker compose up -d web angular-ui
 
 app-down: ## Stop and remove local Docker Compose containers
 	docker compose down -v
