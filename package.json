@@ -4,11 +4,13 @@
   "description": "Production-style Cypress E2E framework with Page Object Model, scoped helper methods vs. global commands, cy.step() logging, @cypress/grep suite & environment tag filtering (#integration, #staging, #prod), and cypress-parallel execution.",
   "private": true,
   "scripts": {
+    "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:chrome": "cypress run --browser chrome",
     "cy:parallel": "cypress-parallel -s cy:run -t 2 -d 'cypress/e2e/**/*.cy.js'",
     "cy:parallel:chrome": "cypress-parallel -s cy:run:chrome -t 2 -d 'cypress/e2e/**/*.cy.js'",
     "test": "cypress run",
+    "test:local": "CYPRESS_BASE_URL=http://localhost:4200 CYPRESS_API_URL=http://localhost:8091 npm run cy:parallel",
     "test:smoke": "cypress run --env grepTags=@smoke",
     "test:regression": "cypress run --env grepTags=@regression",
     "test:api": "cypress run --env grepTags=@api",

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help app-up app-down wait test smoke regression integration staging prod parallel lint demo
+.PHONY: help app-up app-down wait test test-local smoke regression api integration staging prod parallel lint demo
 
 help: ## Show available Make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -31,6 +31,9 @@ wait: ## Verify live Practice Software Testing site is reachable
 
 test: ## Run full Cypress suite sequentially (1 worker)
 	npm test
+
+test-local: ## Run parallel Cypress suite against local Docker stack (:4200 / :8091)
+	npm run test:local
 
 smoke: ## Run @smoke tagged specs only
 	npm run test:smoke
